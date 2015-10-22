@@ -41,6 +41,7 @@ struct LexState {
   int sign;
   bool isDec;
   bool isHex;
+  string errorString;
 };
 
 struct Transition {

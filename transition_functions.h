@@ -27,16 +27,11 @@ void addEncounteredDigitAndB(LexState* state) {
 }
 
 void acceptHex(LexState* state) {
-
+  state->isHex = true;
 }
 
 void acceptDec(LexState* state) {
-
-}
-
-void blah(LexState* state) {
-  state->currentState = ACCEPT;
-  printf("Implement Accept\n");
+  state->isDec = true;
 }
 
 void reject(LexState* state) {
@@ -47,12 +42,12 @@ void reject(LexState* state) {
 array<array<Transition, 8>, 10> TRANSITION_TABLE = {{
   {{ {LEADING_ZERO, NULL}, {OCT_HEX_DEC, addEncounteredDigit}, {HEX_DEC, addEncounteredDigit}, {SAW_SIGN, setSign}, {HEX, addEncounteredDigit}, {HEX, addEncounteredDigit}, {REJECT, reject}, {REJECT, reject} }},
   {{ {SIGN_LEADING_ZERO, NULL}, {DECIMAL, addEncounteredDigit}, {DECIMAL, addEncounteredDigit}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject} }},
-  {{ {DECIMAL, addEncounteredDigit}, {DECIMAL, addEncounteredDigit}, {DECIMAL, addEncounteredDigit}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {ACCEPT, blah} }},
-  {{ {OCT_HEX_DEC, addEncounteredDigit}, {OCT_HEX_DEC, addEncounteredDigit}, {HEX_DEC, addEncounteredDigit}, {REJECT, reject}, {HEX, addEncounteredDigit}, {SAW_B, NULL}, {SAW_H, NULL}, {ACCEPT, blah} }},
-  {{ {HEX_DEC, addEncounteredDigit}, {HEX_DEC, addEncounteredDigit}, {HEX_DEC, addEncounteredDigit}, {REJECT, reject}, {HEX, addEncounteredDigit}, {HEX, addEncounteredDigit}, {SAW_H, NULL}, {ACCEPT, blah} }},
+  {{ {DECIMAL, addEncounteredDigit}, {DECIMAL, addEncounteredDigit}, {DECIMAL, addEncounteredDigit}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {ACCEPT, acceptDec} }},
+  {{ {OCT_HEX_DEC, addEncounteredDigit}, {OCT_HEX_DEC, addEncounteredDigit}, {HEX_DEC, addEncounteredDigit}, {REJECT, reject}, {HEX, addEncounteredDigit}, {SAW_B, NULL}, {SAW_H, NULL}, {ACCEPT, acceptDec} }},
+  {{ {HEX_DEC, addEncounteredDigit}, {HEX_DEC, addEncounteredDigit}, {HEX_DEC, addEncounteredDigit}, {REJECT, reject}, {HEX, addEncounteredDigit}, {HEX, addEncounteredDigit}, {SAW_H, NULL}, {ACCEPT, acceptDec} }},
   {{ {HEX, addEncounteredDigit}, {HEX, addEncounteredDigit}, {HEX, addEncounteredDigit}, {REJECT, reject}, {HEX, addEncounteredDigit}, {HEX, addEncounteredDigit}, {SAW_H, NULL}, {REJECT, reject} }},
-  {{ {HEX, addEncounteredDigitAndB}, {HEX, addEncounteredDigitAndB}, {HEX, addEncounteredDigitAndB}, {REJECT, reject}, {HEX, addEncounteredDigitAndB}, {HEX, addEncounteredDigitAndB}, {SAW_H, NULL}, {ACCEPT, blah} }},
-  {{ {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {ACCEPT, blah} }},
-  {{ {LEADING_ZERO, NULL}, {OCT_HEX_DEC, addEncounteredDigit}, {HEX_DEC, addEncounteredDigit}, {REJECT, reject}, {SAW_B, NULL}, {SAW_H, NULL}, {ACCEPT, blah} }},
-  {{ {SIGN_LEADING_ZERO, NULL}, {DECIMAL, addEncounteredDigit}, {DECIMAL, addEncounteredDigit}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {ACCEPT, blah} }}
+  {{ {HEX, addEncounteredDigitAndB}, {HEX, addEncounteredDigitAndB}, {HEX, addEncounteredDigitAndB}, {REJECT, reject}, {HEX, addEncounteredDigitAndB}, {HEX, addEncounteredDigitAndB}, {SAW_H, NULL}, {ACCEPT, NULL} }},
+  {{ {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {ACCEPT, acceptHex} }},
+  {{ {LEADING_ZERO, NULL}, {OCT_HEX_DEC, addEncounteredDigit}, {HEX_DEC, addEncounteredDigit}, {REJECT, reject}, {SAW_B, NULL}, {SAW_H, NULL}, {ACCEPT, acceptDec} }},
+  {{ {SIGN_LEADING_ZERO, NULL}, {DECIMAL, addEncounteredDigit}, {DECIMAL, addEncounteredDigit}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {ACCEPT, acceptDec} }}
 }};
