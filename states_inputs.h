@@ -2,6 +2,7 @@
 #include <array>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 using namespace std;
 
@@ -23,12 +24,13 @@ enum State {
 enum Input {
   ZERO,
   ONE_T0_SEVEN,
-  EIGHT_TO_9,
+  EIGHT_TO_NINE,
   SIGN,
   HEX_ACDEF,
   B,
   H,
-  END
+  END,
+  INVALID
 };
 
 struct LexState {
@@ -41,11 +43,7 @@ struct LexState {
   bool isHex;
 };
 
-void blah(LexState l) {
-  printf("%s\n", "sd");
-}
-
 struct Transition {
   State nextState;
-  void (*transitionFunction)(LexState);
+  void (*transitionFunction)(LexState*);
 };
