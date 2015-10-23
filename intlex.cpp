@@ -26,16 +26,8 @@ Input characterToInputClass(char c) {
 int vectorSum(vector<int> v, int base) {
   int sum = 0;
   for (auto num = v.begin(); num != v.end(); ++num) {
-    if (base == 16) {
-      sum <<= 4;
-      sum += *num;
-    } else if (base == 8) {
-      sum <<= 3;
-      sum += *num;
-    } else {
-      sum *= 10;
-      sum += *num;
-    }
+    sum *= base;
+    sum += *num;
   }
 
   return sum;
