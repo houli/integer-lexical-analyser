@@ -16,14 +16,14 @@ void setSign(LexState* state) {
   }
 }
 
-void addEncounteredDigit(LexState* state) {
+void pushDigit(LexState* state) {
   int digit = digitToInt(state->currentChar);
-  state->encounteredDigits.push_back(digit);
+  state->digits.push_back(digit);
 }
 
-void addEncounteredDigitAndB(LexState* state) {
-  state->encounteredDigits.push_back(digitToInt('b'));
-  addEncounteredDigit(state);
+void pushDigitAndB(LexState* state) {
+  state->digits.push_back(digitToInt('b'));
+  pushDigit(state);
 }
 
 void acceptHex(LexState* state) {
@@ -34,20 +34,49 @@ void acceptDec(LexState* state) {
   state->isDec = true;
 }
 
-void reject(LexState* state) {
-  printf("Implement Reject\n");
+void rejectSign(LexState* state) {
+  state->errorString = "Sign not in first position";
+}
+
+void rejectSignOnly(LexState* state) {
+  state->errorString = "Sign provided but no decimal constant";
+}
+
+void rejectAfterH(LexState* state) {
+  state->errorString = "Character encountered after ending h/H";
+}
+
+void rejectHexInDecimal(LexState* state) {
+  state->errorString = "Hex digit in decimal constant";
+}
+
+void rejectUnterminatedHex(LexState* state) {
+  state->errorString = "Hex constant without h/H terminator";
+}
+
+void rejectHInDecimal(LexState* state) {
+  state->errorString = "Terminator h/H in decimal constant";
+}
+
+void rejectHAtStart(LexState* state) {
+  state->errorString = "Terminator h/H at beginning of string";
+}
+
+void rejectEmpty(LexState* state) {
+  state->errorString = "Empty string is invalid";
 }
 
 // Transition table where row is accessed by state and column accessed by input type
 array<array<Transition, 8>, 10> TRANSITION_TABLE = {{
-  {{ {LEADING_ZERO, NULL}, {OCT_HEX_DEC, addEncounteredDigit}, {HEX_DEC, addEncounteredDigit}, {SAW_SIGN, setSign}, {HEX, addEncounteredDigit}, {HEX, addEncounteredDigit}, {REJECT, reject}, {REJECT, reject} }},
-  {{ {SIGN_LEADING_ZERO, NULL}, {DECIMAL, addEncounteredDigit}, {DECIMAL, addEncounteredDigit}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject} }},
-  {{ {DECIMAL, addEncounteredDigit}, {DECIMAL, addEncounteredDigit}, {DECIMAL, addEncounteredDigit}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {ACCEPT, acceptDec} }},
-  {{ {OCT_HEX_DEC, addEncounteredDigit}, {OCT_HEX_DEC, addEncounteredDigit}, {HEX_DEC, addEncounteredDigit}, {REJECT, reject}, {HEX, addEncounteredDigit}, {SAW_B, NULL}, {SAW_H, NULL}, {ACCEPT, acceptDec} }},
-  {{ {HEX_DEC, addEncounteredDigit}, {HEX_DEC, addEncounteredDigit}, {HEX_DEC, addEncounteredDigit}, {REJECT, reject}, {HEX, addEncounteredDigit}, {HEX, addEncounteredDigit}, {SAW_H, NULL}, {ACCEPT, acceptDec} }},
-  {{ {HEX, addEncounteredDigit}, {HEX, addEncounteredDigit}, {HEX, addEncounteredDigit}, {REJECT, reject}, {HEX, addEncounteredDigit}, {HEX, addEncounteredDigit}, {SAW_H, NULL}, {REJECT, reject} }},
-  {{ {HEX, addEncounteredDigitAndB}, {HEX, addEncounteredDigitAndB}, {HEX, addEncounteredDigitAndB}, {REJECT, reject}, {HEX, addEncounteredDigitAndB}, {HEX, addEncounteredDigitAndB}, {SAW_H, NULL}, {ACCEPT, NULL} }},
-  {{ {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {ACCEPT, acceptHex} }},
-  {{ {LEADING_ZERO, NULL}, {OCT_HEX_DEC, addEncounteredDigit}, {HEX_DEC, addEncounteredDigit}, {REJECT, reject}, {SAW_B, NULL}, {SAW_H, NULL}, {ACCEPT, acceptDec} }},
-  {{ {SIGN_LEADING_ZERO, NULL}, {DECIMAL, addEncounteredDigit}, {DECIMAL, addEncounteredDigit}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {REJECT, reject}, {ACCEPT, acceptDec} }}
+  /* */
+  {{ {LEADING_ZERO, NULL}, {OCT_HEX_DEC, pushDigit}, {HEX_DEC, pushDigit}, {SAW_SIGN, setSign}, {HEX, pushDigit}, {HEX, pushDigit}, {REJECT, rejectHAtStart}, {REJECT, rejectEmpty} }},
+  {{ {SIGN_LEADING_ZERO, NULL}, {DECIMAL, pushDigit}, {DECIMAL, pushDigit}, {REJECT, rejectSign}, {REJECT, rejectHexInDecimal}, {REJECT, rejectHexInDecimal}, {REJECT, rejectHInDecimal}, {REJECT, rejectSignOnly} }},
+  {{ {DECIMAL, pushDigit}, {DECIMAL, pushDigit}, {DECIMAL, pushDigit}, {REJECT, rejectSign}, {REJECT, rejectHexInDecimal}, {REJECT, rejectHexInDecimal}, {REJECT, rejectHInDecimal}, {ACCEPT, acceptDec} }},
+  {{ {OCT_HEX_DEC, pushDigit}, {OCT_HEX_DEC, pushDigit}, {HEX_DEC, pushDigit}, {REJECT, rejectSign}, {HEX, pushDigit}, {SAW_B, NULL}, {SAW_H, NULL}, {ACCEPT, acceptDec} }},
+  {{ {HEX_DEC, pushDigit}, {HEX_DEC, pushDigit}, {HEX_DEC, pushDigit}, {REJECT, rejectSign}, {HEX, pushDigit}, {HEX, pushDigit}, {SAW_H, NULL}, {ACCEPT, acceptDec} }},
+  {{ {HEX, pushDigit}, {HEX, pushDigit}, {HEX, pushDigit}, {REJECT, rejectSign}, {HEX, pushDigit}, {HEX, pushDigit}, {SAW_H, NULL}, {REJECT, rejectUnterminatedHex} }},
+  {{ {HEX, pushDigitAndB}, {HEX, pushDigitAndB}, {HEX, pushDigitAndB}, {REJECT, rejectSign}, {HEX, pushDigitAndB}, {HEX, pushDigitAndB}, {SAW_H, NULL}, {ACCEPT, NULL} }},
+  {{ {REJECT, rejectAfterH}, {REJECT, rejectAfterH}, {REJECT, rejectAfterH}, {REJECT, rejectSign}, {REJECT, rejectAfterH}, {REJECT, rejectAfterH}, {REJECT, rejectAfterH}, {ACCEPT, acceptHex} }},
+  {{ {LEADING_ZERO, NULL}, {OCT_HEX_DEC, pushDigit}, {HEX_DEC, pushDigit}, {REJECT, rejectSign}, {SAW_B, NULL}, {SAW_H, NULL}, {ACCEPT, acceptDec} }},
+  {{ {SIGN_LEADING_ZERO, NULL}, {DECIMAL, pushDigit}, {DECIMAL, pushDigit}, {REJECT, rejectSign}, {REJECT, rejectHexInDecimal}, {REJECT, rejectHexInDecimal}, {REJECT, rejectHexInDecimal}, {ACCEPT, acceptDec} }}
 }};

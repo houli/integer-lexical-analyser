@@ -25,70 +25,102 @@ Input characterToInputClass(char c) {
 
 int vectorSum(vector<int> v, int base) {
   int sum = 0;
-  for (auto it = v.begin(); it != v.end(); ++it) {
+  for (auto num = v.begin(); num != v.end(); ++num) {
     if (base == 16) {
       sum <<= 4;
-      sum += *it;
+      sum += *num;
     } else if (base == 8) {
       sum <<= 3;
-      sum += *it;
+      sum += *num;
     } else {
       sum *= 10;
-      sum += *it;
+      sum += *num;
     }
   }
 
   return sum;
 }
 
-LexState* initialiseLexState(string s) {
-  LexState* state = new LexState;
-  state->currentState = START;
-  state->currentInput = characterToInputClass(s[0]);
-  state->currentChar = s[0];
-  state->sign = 1;
-  state->isDec = false;
-  state->isHex = false;
-  return state;
+bool willOverflowDecimal(LexState* state) {
+  if (state->digits.size() < 10) {
+    return false;
+  } else if (state->digits.size() > 10) {
+    return true;
+  }
+
+  string decimalString = "";
+
+  for (auto digit = state->digits.begin(); digit != state->digits.end(); ++digit) {
+    decimalString += *digit + '0';
+  }
+
+  if (state->sign == -1) {
+    return decimalString.compare("2147483648") > 0;
+  } else {
+    return decimalString.compare("2147483647") > 0;
+  }
 }
 
 string stringToLexicalToken(string s) {
   string copy = s;
   transform(s.begin(), s.end(), s.begin(), ::tolower);
   s += '\0';
-  LexState* state = initialiseLexState(s);
 
-  for (auto it = s.begin(); it != s.end(); ++it) {
+  LexState* state = new LexState(s[0]);
+
+  string lexemeString = "Lexeme(" + copy + ") -> ";
+  string errorString = lexemeString + "ERROR: ";
+
+  for (auto character = s.begin(); character != s.end(); ++character) {
     if (state->currentState == REJECT) {
       break;
     }
-    state->currentInput = characterToInputClass(*it);
-    state->currentChar = *it;
-    Transition transition = TRANSITION_TABLE[state->currentState][state->currentInput];
+    Input currentInput = characterToInputClass(*character);
 
-    if (transition.transitionFunction != NULL) {
-      transition.transitionFunction(state);
+    if (currentInput == INVALID) {
+      return errorString + "Invalid character encountered";
+    }
+
+    state->currentChar = *character;
+    Transition transition = TRANSITION_TABLE[state->currentState][currentInput];
+
+    if (transition.action != NULL) {
+      transition.action(state);
     }
 
     state->currentState = transition.nextState;
   }
 
   if (state->currentState == REJECT) {
-    return "Lexeme(" + copy + ") ->" + " ERROR: " + state->errorString;
+    return errorString + state->errorString;
   }
 
-  int base = 8;
+  int base;
+  string type;
   if (state->isHex) {
+    if (state->digits.size() > 8) {
+      return errorString + "Overflowed hex";
+    }
     base = 16;
+    type = "Hexadecimal";
   } else if (state->isDec) {
+    if (willOverflowDecimal(state)) {
+      return errorString + "Overflowed decimal";
+    }
     base = 10;
+    type = "Decimal";
+  } else {
+    if (state->digits.size() > 11 || (state->digits.size() == 11 && state->digits[0] > 3)) {
+      return errorString + "Overflowed octal";
+    }
+    base = 8;
+    type = "Octal";
   }
 
-  int result = vectorSum(state->encounteredDigits, base) * state->sign;
-
+  int result = vectorSum(state->digits, base) * state->sign;
 
   delete state;
-  return "Lexeme(" + copy + ") -> Lexical Token (" + to_string(result) + ")";
+  return lexemeString + "Lexical Token(" + type + " Constant, " + to_string(result) + ")";
 }
 
 int main(int argc, const char* argv[]) {
@@ -96,10 +128,10 @@ int main(int argc, const char* argv[]) {
     cout << stringToLexicalToken(string(argv[i])) << "\n";
   }
 
-  array<string, 6> inputs = {{"179", "-2803", "-0", "4BC9h", "172371B", "BB"}};
+  array<string, 7> inputs = {{"179", "-2803", "-0", "4BC9h", "172371B", "BB", "-000001"}};
 
-  for (auto it = inputs.begin(); it != inputs.end(); ++it) {
-    cout << stringToLexicalToken(*it) << "\n";
+  for (auto input = inputs.begin(); input != inputs.end(); ++input) {
+    cout << stringToLexicalToken(*input) << "\n";
   }
 
   return 0;

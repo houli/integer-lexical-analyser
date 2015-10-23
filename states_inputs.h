@@ -35,16 +35,23 @@ enum Input {
 
 struct LexState {
   State currentState;
-  Input currentInput;
   char currentChar;
-  vector<int> encounteredDigits;
+  vector<int> digits;
   int sign;
   bool isDec;
   bool isHex;
   string errorString;
+
+  LexState(char start) {
+    currentState = START;
+    currentChar = start;
+    sign = 1;
+    isDec = false;
+    isHex = false;
+  }
 };
 
 struct Transition {
   State nextState;
-  void (*transitionFunction)(LexState*);
+  void (*action)(LexState*);
 };
