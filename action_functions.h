@@ -1,5 +1,6 @@
 #include "states_inputs.h"
 
+/* Convert '0'-'9' and 'a'-'f' to their integer equivalents */
 int digitToInt(char digit) {
   if (digit >= 'a' && digit <= 'f') {
     return (digit - 'a') + 10;
@@ -8,6 +9,7 @@ int digitToInt(char digit) {
   }
 }
 
+/* Update the sign value in the state object to -1 or +1 depending on the sign character */
 void setSign(LexState* state) {
   if (state->currentChar == '+') {
     state->sign = 1;
@@ -16,15 +18,21 @@ void setSign(LexState* state) {
   }
 }
 
+/* Add a digit's int value to the vector of encountered digits */
 void pushDigit(LexState* state) {
   int digit = digitToInt(state->currentChar);
   state->digits.push_back(digit);
 }
 
+/* Add the previous b's int value and the digit's int value to the vector of encountered digits */
 void pushDigitAndB(LexState* state) {
   state->digits.push_back(digitToInt('b'));
   pushDigit(state);
 }
+
+/*
+* Accept functions. These set what kind of number we received
+*/
 
 void acceptHex(LexState* state) {
   state->isHex = true;
@@ -33,6 +41,10 @@ void acceptHex(LexState* state) {
 void acceptDec(LexState* state) {
   state->isDec = true;
 }
+
+/*
+* Reject functions. These set appropriate error strings
+*/
 
 void rejectSign(LexState* state) {
   state->errorString = "Sign not in first position";

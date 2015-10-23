@@ -6,6 +6,7 @@
 
 using namespace std;
 
+// The state enum encapsulates the current state of the FSM
 enum State {
   START,
   SAW_SIGN,
@@ -21,6 +22,7 @@ enum State {
   REJECT
 };
 
+// The input enum encapsulates the current input type of the current character
 enum Input {
   ZERO,
   ONE_T0_SEVEN,
@@ -33,6 +35,7 @@ enum Input {
   INVALID
 };
 
+// Our lexical analyser state object that is used in the action functions
 struct LexState {
   State currentState;
   char currentChar;
@@ -42,6 +45,7 @@ struct LexState {
   bool isHex;
   string errorString;
 
+  // Constructor for our lexical analyser state
   LexState(char start) {
     currentState = START;
     currentChar = start;
@@ -51,6 +55,10 @@ struct LexState {
   }
 };
 
+/*
+* The transition struct stores the next state of the machine as well as the
+* action function that should take place at that transition
+*/
 struct Transition {
   State nextState;
   void (*action)(LexState*);
