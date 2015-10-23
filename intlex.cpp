@@ -143,7 +143,28 @@ int main(int argc, const char* argv[]) {
   }
 
   // Predefined tests
-  array<string, 7> inputs = {{"179", "-2803", "-0", "4BC9h", "172371B", "BB", "-000001"}};
+  array<string, 21> inputs = {{"00001574",
+                               "+00001574",
+                               "AD9Ch",
+                               "AB9Ch",
+                               "-1239",
+                               "+1239",
+                               "00017b",
+                               "2147483647",
+                               "-2147483648",
+                               "-0",
+                               "FFFFFFFFH",
+                               "37777777777B",
+                               /* Invalid after here */
+                               "asd",
+                               "9-45",
+                               "+BCh",
+                               "-12374B",
+                               "34A7b",
+                               "2147483648",
+                               "-2147483649",
+                               "100000000H",
+                               "40000000000b"}};
 
   for (auto input = inputs.begin(); input != inputs.end(); ++input) {
     cout << stringToLexicalToken(*input) << "\n";
